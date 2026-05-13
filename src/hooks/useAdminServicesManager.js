@@ -141,10 +141,12 @@ export function useAdminServicesManager() {
       standard_price: updates.standard_price === undefined ? undefined : toNumberOrNull(updates.standard_price),
     }
 
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from('services')
       .update(normalizedUpdates)
+      .select('*, category:service_categories(name, slug)')
       .eq('id', serviceId)
+      .single()
 
     setUpdatingId('')
 
@@ -157,11 +159,13 @@ export function useAdminServicesManager() {
         service.id === serviceId
           ? {
               ...service,
-              ...normalizedUpdates,
+              ...(data ?? normalizedUpdates),
             }
           : service,
       ),
     )
+
+    return data
   }
 
   const createCategory = async (payload) => {

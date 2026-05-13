@@ -31,6 +31,20 @@ const initialServiceForm = {
   standardPrice: '',
 }
 
+const buildServiceForm = (service) => ({
+  categoryId: service.category_id ?? '',
+  description: service.description ?? '',
+  durationMins: String(service.duration_mins ?? ''),
+  hasHomeService: Boolean(service.has_home_service),
+  homeServiceMemberPrice: String(service.home_service_member_price ?? ''),
+  homeServiceStandardPrice: String(service.home_service_standard_price ?? ''),
+  imageUrl: service.image_url ?? '',
+  isActive: service.is_active !== false,
+  memberPrice: String(service.member_price ?? ''),
+  name: service.name ?? '',
+  standardPrice: String(service.standard_price ?? ''),
+})
+
 function SummaryCard({ hint, label, value }) {
   return (
     <Card className="p-5">
@@ -54,8 +68,12 @@ export default function AdminServicesPage() {
   } = useAdminServicesManager()
   const [categoryForm, setCategoryForm] = useState(initialCategoryForm)
   const [serviceForm, setServiceForm] = useState(initialServiceForm)
+  const [editingServiceId, setEditingServiceId] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+
+  const isEditingService = Boolean(editingServiceId)
+  const isSavingService = updatingId === 'service' || updatingId === editingServiceId
 
   const summary = useMemo(
     () => ({
@@ -94,6 +112,18 @@ export default function AdminServicesPage() {
     }))
   }
 
+  const resetServiceForm = () => {
+    setEditingServiceId('')
+    setServiceForm(initialServiceForm)
+  }
+
+  const handleEditService = (service) => {
+    setErrorMessage('')
+    setSuccessMessage('')
+    setEditingServiceId(service.id)
+    setServiceForm(buildServiceForm(service))
+  }
+
   const handleCategorySubmit = async (event) => {
     event.preventDefault()
     setErrorMessage('')
@@ -113,10 +143,34 @@ export default function AdminServicesPage() {
     setErrorMessage('')
     setSuccessMessage('')
 
+    const nextServicePayload = {
+      ...serviceForm,
+      homeServiceMemberPrice: serviceForm.hasHomeService ? serviceForm.homeServiceMemberPrice : '',
+      homeServiceStandardPrice: serviceForm.hasHomeService ? serviceForm.homeServiceStandardPrice : '',
+    }
+
     try {
-      await createService(serviceForm)
-      setServiceForm(initialServiceForm)
-      setSuccessMessage('Service created successfully.')
+      if (isEditingService) {
+        await updateService(editingServiceId, {
+          category_id: nextServicePayload.categoryId || null,
+          description: nextServicePayload.description,
+          duration_mins: nextServicePayload.durationMins,
+          has_home_service: nextServicePayload.hasHomeService,
+          home_service_member_price: nextServicePayload.homeServiceMemberPrice,
+          home_service_standard_price: nextServicePayload.homeServiceStandardPrice,
+          image_url: nextServicePayload.imageUrl || null,
+          is_active: nextServicePayload.isActive,
+          member_price: nextServicePayload.memberPrice,
+          name: nextServicePayload.name,
+          standard_price: nextServicePayload.standardPrice,
+        })
+        setSuccessMessage('Service updated successfully.')
+      } else {
+        await createService(nextServicePayload)
+        setSuccessMessage('Service created successfully.')
+      }
+
+      resetServiceForm()
     } catch (createError) {
       setErrorMessage(createError.message)
     }
@@ -132,13 +186,22 @@ export default function AdminServicesPage() {
 
   const rows = services.map((service) => ({
     actions: (
-      <Button
-        disabled={updatingId === service.id}
-        onClick={() => void updateService(service.id, { is_active: !service.is_active })}
-        variant="secondary"
-      >
-        {service.is_active ? 'Deactivate' : 'Activate'}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          disabled={updatingId === service.id}
+          onClick={() => handleEditService(service)}
+          variant="secondary"
+        >
+          {editingServiceId === service.id ? 'Editing' : 'Edit'}
+        </Button>
+        <Button
+          disabled={updatingId === service.id}
+          onClick={() => void updateService(service.id, { is_active: !service.is_active })}
+          variant="secondary"
+        >
+          {service.is_active ? 'Deactivate' : 'Activate'}
+        </Button>
+      </div>
     ),
     category: service.category?.name ?? 'Unassigned',
     id: service.id,
@@ -156,9 +219,23 @@ export default function AdminServicesPage() {
       </div>
     ),
     service: (
-      <div>
-        <p className="font-semibold text-brand-dark">{service.name}</p>
-        <p className="mt-1 text-xs text-brand-dark/55">{service.duration_mins ?? 'N/A'} mins</p>
+      <div className="flex items-center gap-3">
+        {service.image_url ? (
+          <img
+            alt={service.name}
+            className="h-12 w-12 rounded-2xl object-cover"
+            loading="lazy"
+            src={service.image_url}
+          />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-secondary/25 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-dark/45">
+            DLM
+          </div>
+        )}
+        <div>
+          <p className="font-semibold text-brand-dark">{service.name}</p>
+          <p className="mt-1 text-xs text-brand-dark/55">{service.duration_mins ?? 'N/A'} mins</p>
+        </div>
       </div>
     ),
     status: <StatusBadge status={service.is_active ? 'active' : 'inactive'} label={service.is_active ? 'Active' : 'Inactive'} />,
@@ -172,7 +249,7 @@ export default function AdminServicesPage() {
         <p className="text-xs uppercase tracking-[0.28em] text-brand-dark/45">Admin</p>
         <h1 className="mt-2 text-4xl">Service management</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-brand-dark/65">
-          Manage service categories, create new services, and control whether each offer is visible for booking.
+          Manage service categories, edit existing services, and control whether each offer is visible for booking.
         </p>
       </section>
 
@@ -199,7 +276,7 @@ export default function AdminServicesPage() {
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-3xl">Add service</h2>
+          <h2 className="text-3xl">{isEditingService ? 'Edit service' : 'Add service'}</h2>
           <form className="mt-5 grid gap-4 md:grid-cols-2" onSubmit={handleServiceSubmit}>
             <Input label="Service name" name="name" onChange={handleServiceChange} required value={serviceForm.name} />
             <Select label="Category" name="categoryId" onChange={handleServiceChange} value={serviceForm.categoryId}>
@@ -214,6 +291,7 @@ export default function AdminServicesPage() {
             <Input label="Member price" name="memberPrice" onChange={handleServiceChange} required type="number" value={serviceForm.memberPrice} />
             <Input
               label="Home standard price"
+              disabled={!serviceForm.hasHomeService}
               name="homeServiceStandardPrice"
               onChange={handleServiceChange}
               type="number"
@@ -221,6 +299,7 @@ export default function AdminServicesPage() {
             />
             <Input
               label="Home member price"
+              disabled={!serviceForm.hasHomeService}
               name="homeServiceMemberPrice"
               onChange={handleServiceChange}
               type="number"
@@ -231,7 +310,7 @@ export default function AdminServicesPage() {
               <Input label="Image URL" name="imageUrl" onChange={handleServiceChange} value={serviceForm.imageUrl} />
               <CloudinaryUploadField
                 folder="services"
-                helperText="Upload a service cover image directly to Cloudinary, then create the service with the saved URL."
+                helperText="Upload a service cover image directly to Cloudinary and save the form when you are ready."
                 label="Service image"
                 onUploaded={handleServiceImagesUploaded}
                 previews={serviceImagePreviews}
@@ -248,8 +327,21 @@ export default function AdminServicesPage() {
               <input checked={serviceForm.isActive} name="isActive" onChange={handleServiceChange} type="checkbox" />
               Publish immediately
             </label>
-            <div className="md:col-span-2">
-              <Button disabled={updatingId === 'service'} type="submit">Create service</Button>
+            <div className="md:col-span-2 flex flex-wrap gap-3">
+              {isEditingService ? (
+                <Button onClick={resetServiceForm} type="button" variant="secondary">
+                  Cancel edit
+                </Button>
+              ) : null}
+              <Button disabled={isSavingService} type="submit">
+                {isEditingService
+                  ? isSavingService
+                    ? 'Saving changes...'
+                    : 'Save changes'
+                  : updatingId === 'service'
+                    ? 'Creating service...'
+                    : 'Create service'}
+              </Button>
             </div>
           </form>
         </Card>

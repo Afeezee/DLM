@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
+import ThemeToggle from '../shared/ThemeToggle'
 import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
@@ -49,6 +50,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <ThemeToggle />
           {user ? (
             <>
               <Link to={profile?.role === 'admin' ? '/admin' : '/dashboard'}>
@@ -68,18 +70,21 @@ export default function Navbar() {
           )}
         </div>
 
-        <button
-          type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-dark/10 bg-white/70 lg:hidden"
-          onClick={() => setIsOpen((current) => !current)}
-          aria-label="Toggle navigation"
-        >
-          <span className="space-y-1.5">
-            <span className="block h-0.5 w-5 bg-brand-dark" />
-            <span className="block h-0.5 w-5 bg-brand-dark" />
-            <span className="block h-0.5 w-5 bg-brand-dark" />
-          </span>
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle compact />
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-dark/10 bg-white/70 lg:hidden"
+            onClick={() => setIsOpen((current) => !current)}
+            aria-label="Toggle navigation"
+          >
+            <span className="space-y-1.5">
+              <span className="block h-0.5 w-5 bg-brand-dark" />
+              <span className="block h-0.5 w-5 bg-brand-dark" />
+              <span className="block h-0.5 w-5 bg-brand-dark" />
+            </span>
+          </button>
+        </div>
       </div>
 
       {isOpen ? (
@@ -90,6 +95,13 @@ export default function Navbar() {
           className="border-t border-brand-dark/8 bg-white/90 lg:hidden"
         >
           <div className="shell flex flex-col gap-4 py-4">
+            <div className="flex items-center justify-between rounded-[24px] border border-brand-dark/8 bg-brand-secondary/18 px-4 py-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Appearance</p>
+                <p className="mt-1 text-sm font-medium text-brand-dark/72">Switch your theme</p>
+              </div>
+              <ThemeToggle compact />
+            </div>
             {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} onClick={() => setIsOpen(false)}>
                 {item.label}

@@ -18,6 +18,7 @@ import ScrollProgress from './components/shared/ScrollProgress'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { MembershipProvider } from './context/MembershipContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { useAuth } from './hooks/useAuth'
 import LandingPage from './pages/LandingPage'
 
@@ -315,15 +316,17 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <MembershipProvider>
-        <CartProvider>
-          <BrowserRouter>
-            <AnimatedRoutes />
-          </BrowserRouter>
-        </CartProvider>
-      </MembershipProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MembershipProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <AnimatedRoutes />
+            </BrowserRouter>
+          </CartProvider>
+        </MembershipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

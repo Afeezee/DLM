@@ -15,11 +15,11 @@ export default function AmbientBackdrop() {
       />
       <motion.div
         animate={{ scale: [1, 0.92, 1.04, 1], x: [0, 20, -24, 0], y: [0, -16, 20, 0] }}
-        className="absolute bottom-[-8rem] left-[28%] h-96 w-96 rounded-full bg-amber-200/30 blur-3xl"
+        className="absolute bottom-[-8rem] left-[28%] h-96 w-96 rounded-full bg-brand-secondary/26 blur-3xl"
         transition={{ duration: 26, ease: 'easeInOut', repeat: Infinity }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.16),transparent_36%,rgba(255,255,255,0.08)_58%,transparent_78%)]" />
-      <div className="absolute inset-0 opacity-[0.28] bg-[linear-gradient(rgba(140,106,59,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(140,106,59,0.08)_1px,transparent_1px)] bg-[size:74px_74px] [mask-image:linear-gradient(180deg,black,transparent_94%)]" />
+      <div className="ambient-sheen absolute inset-0" />
+      <div className="ambient-grid absolute inset-0 opacity-[0.28]" />
     </div>
   )
 }

@@ -81,7 +81,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.55, delay: 0.1 }}
-          className="surface relative overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.78),transparent_28%),linear-gradient(145deg,rgba(255,247,238,0.88),rgba(246,234,223,0.94))] p-8 sm:p-10"
+          className="surface spotlight-panel relative overflow-hidden p-8 sm:p-10"
         >
           <div className="absolute right-6 top-6 h-20 w-20 rounded-full bg-brand-accent/10 blur-2xl" />
           <div className="absolute bottom-10 left-10 h-24 w-24 rounded-full bg-brand-primary/20 blur-2xl" />
@@ -146,7 +146,7 @@ export default function LandingPage() {
       </section>
 
       <section className="shell py-12 sm:py-16">
-        <Card className="grid gap-8 bg-[linear-gradient(135deg,rgba(36,27,18,0.98),rgba(86,57,32,0.94))] p-8 text-brand-light sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <Card className="premium-band grid gap-8 p-8 text-brand-light sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-brand-light/55">Membership call to action</p>
             <RevealText

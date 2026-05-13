@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ThemeToggle from '../shared/ThemeToggle'
 import Button from '../ui/Button'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -25,6 +26,7 @@ export default function AdminTopbar({ onMenuOpen = () => {} }) {
               <span className="block h-0.5 w-5 rounded-full bg-current" />
             </span>
           </button>
+          <ThemeToggle compact className="shrink-0" />
           <Link to="/">
             <Button className="hidden sm:inline-flex" variant="secondary">View site</Button>
           </Link>

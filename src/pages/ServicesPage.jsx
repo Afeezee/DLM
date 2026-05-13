@@ -201,6 +201,7 @@ export default function ServicesPage() {
                       ctaLabel="View service"
                       description={details}
                       eyebrow={service.category?.name ?? 'Signature experience'}
+                      imageUrl={service.image_url}
                       memberPrice={
                         serviceType === 'home' && service.has_home_service
                           ? service.home_service_member_price

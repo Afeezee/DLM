@@ -5,6 +5,7 @@ import { formatCurrency } from '../../utils/formatCurrency'
 
 export default function ProductCard({
   category,
+  imageUrl,
   memberPrice,
   price,
   standardPrice,
@@ -19,6 +20,15 @@ export default function ProductCard({
       className="surface flex h-full flex-col overflow-hidden"
     >
       <div className="relative h-44 bg-hero-mesh">
+        {imageUrl ? (
+          <img
+            alt={title}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            src={imageUrl}
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,18,12,0.05),rgba(24,18,12,0.6))]" />
         <div className="absolute left-5 top-5 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-dark/65">
           {category}
         </div>

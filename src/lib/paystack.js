@@ -1,6 +1,16 @@
 const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
 const paystackScriptUrl = 'https://js.paystack.co/v1/inline.js'
 
+function wrapPaystackHandler(handler) {
+  if (typeof handler !== 'function') {
+    return function noop() {}
+  }
+
+  return function paystackHandler(...args) {
+    void Promise.resolve(handler(...args))
+  }
+}
+
 export const isPaystackConfigured = Boolean(publicKey)
 
 export function getPaystackPublicKey() {
@@ -39,6 +49,16 @@ export async function initializePaystackPayment(config) {
     throw new Error('VITE_PAYSTACK_PUBLIC_KEY is not configured.')
   }
 
+  const {
+    callback,
+    onClose,
+    ref,
+    reference,
+    ...paymentConfig
+  } = config ?? {}
+
+  const paymentReference = reference ?? ref
+
   const PaystackPop = await loadPaystackScript()
 
   if (!PaystackPop) {
@@ -47,7 +67,10 @@ export async function initializePaystackPayment(config) {
 
   const handler = PaystackPop.setup({
     key: publicKey,
-    ...config,
+    ...paymentConfig,
+    callback: wrapPaystackHandler(callback),
+    onClose: wrapPaystackHandler(onClose),
+    ref: paymentReference,
   })
 
   handler.openIframe()

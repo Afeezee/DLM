@@ -167,6 +167,7 @@ export default function FashionPage() {
                 >
                   <ProductCard
                     category={categories.find((entry) => entry.key === product.category)?.label ?? product.category}
+                    imageUrl={product.image_urls?.[0] ?? null}
                     memberPrice={product.member_price}
                     price={getPricing(product, isMember)}
                     standardPrice={product.standard_price}

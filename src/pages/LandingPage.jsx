@@ -132,6 +132,7 @@ export default function LandingPage() {
                 ctaLabel="Explore service"
                 description={service.description}
                 eyebrow={service.category?.name ?? 'Featured service'}
+                imageUrl={service.image_url}
                 memberPrice={service.member_price}
                 price={getPricing(service, isMember)}
                 standardPrice={service.standard_price}

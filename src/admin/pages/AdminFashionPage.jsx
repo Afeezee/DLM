@@ -33,6 +33,17 @@ const initialProductForm = {
   stockQuantity: '0',
 }
 
+const buildProductForm = (product) => ({
+  category: product.category ?? initialProductForm.category,
+  description: product.description ?? '',
+  imageUrls: (product.image_urls ?? []).filter(Boolean).join(', '),
+  isActive: product.is_active !== false,
+  memberPrice: String(product.member_price ?? ''),
+  name: product.name ?? '',
+  standardPrice: String(product.standard_price ?? ''),
+  stockQuantity: String(product.stock_quantity ?? 0),
+})
+
 export default function AdminFashionPage() {
   const {
     createProduct,
@@ -47,7 +58,16 @@ export default function AdminFashionPage() {
   } = useAdminFashionManager()
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [editingProductId, setEditingProductId] = useState('')
   const [productForm, setProductForm] = useState(initialProductForm)
+
+  const isEditingProduct = Boolean(editingProductId)
+  const isSavingProduct = isCreatingProduct || updatingId === editingProductId
+
+  const resetProductForm = () => {
+    setEditingProductId('')
+    setProductForm(initialProductForm)
+  }
 
   const handleProductFormChange = (event) => {
     const { name, type, value, checked } = event.target
@@ -82,7 +102,14 @@ export default function AdminFashionPage() {
     })
   }
 
-  const handleCreateProduct = async (event) => {
+  const handleEditProduct = (product) => {
+    setMessage('')
+    setErrorMessage('')
+    setEditingProductId(product.id)
+    setProductForm(buildProductForm(product))
+  }
+
+  const handleSaveProduct = async (event) => {
     event.preventDefault()
     setMessage('')
     setErrorMessage('')
@@ -111,23 +138,30 @@ export default function AdminFashionPage() {
       return
     }
 
-    try {
-      await createProduct({
-        category: productForm.category,
-        description: productForm.description.trim(),
-        image_urls: productForm.imageUrls
-          .split(',')
-          .map((value) => value.trim())
-          .filter(Boolean),
-        is_active: productForm.isActive,
-        member_price: memberPrice,
-        name: productForm.name.trim(),
-        standard_price: standardPrice,
-        stock_quantity: stockQuantity,
-      })
+    const productPayload = {
+      category: productForm.category,
+      description: productForm.description.trim(),
+      image_urls: productForm.imageUrls
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+      is_active: productForm.isActive,
+      member_price: memberPrice,
+      name: productForm.name.trim(),
+      standard_price: standardPrice,
+      stock_quantity: stockQuantity,
+    }
 
-      setProductForm(initialProductForm)
-      setMessage('Fashion product added successfully.')
+    try {
+      if (isEditingProduct) {
+        await updateProduct(editingProductId, productPayload)
+        setMessage('Fashion product updated successfully.')
+      } else {
+        await createProduct(productPayload)
+        setMessage('Fashion product added successfully.')
+      }
+
+      resetProductForm()
     } catch (createError) {
       setErrorMessage(createError.message)
     }
@@ -193,6 +227,14 @@ export default function AdminFashionPage() {
           type="button"
           className="rounded-full border border-brand-dark/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark/70"
           disabled={updatingId === product.id}
+          onClick={() => handleEditProduct(product)}
+        >
+          {editingProductId === product.id ? 'Editing' : 'Edit'}
+        </button>
+        <button
+          type="button"
+          className="rounded-full border border-brand-dark/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-dark/70"
+          disabled={updatingId === product.id}
           onClick={() => void handleStockChange(product.id, Number(product.stock_quantity ?? 0) - 1)}
         >
           -1 stock
@@ -225,11 +267,25 @@ export default function AdminFashionPage() {
       </div>
     ),
     product: (
-      <div>
-        <p className="font-semibold text-brand-dark">{product.name}</p>
-        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-brand-dark/55">
-          {product.category}
-        </p>
+      <div className="flex items-center gap-3">
+        {product.image_urls?.[0] ? (
+          <img
+            alt={product.name}
+            className="h-12 w-12 rounded-2xl object-cover"
+            loading="lazy"
+            src={product.image_urls[0]}
+          />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-secondary/25 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-dark/45">
+            DLM
+          </div>
+        )}
+        <div>
+          <p className="font-semibold text-brand-dark">{product.name}</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-brand-dark/55">
+            {product.category}
+          </p>
+        </div>
       </div>
     ),
     status: <StatusBadge status={product.is_active ? 'active' : 'cancelled'} label={product.is_active ? 'active' : 'inactive'} />,
@@ -304,14 +360,16 @@ export default function AdminFashionPage() {
       <Card className="p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-3xl">Add fashion product</h2>
+            <h2 className="text-3xl">{isEditingProduct ? 'Edit fashion product' : 'Add fashion product'}</h2>
             <p className="mt-2 text-sm text-brand-dark/60">
-              Create catalogue items with separate standard and member pricing.
+              {isEditingProduct
+                ? 'Update prices, gallery, copy, and stock before saving.'
+                : 'Create catalogue items with separate standard and member pricing.'}
             </p>
           </div>
         </div>
 
-        <form className="space-y-5" onSubmit={handleCreateProduct}>
+        <form className="space-y-5" onSubmit={handleSaveProduct}>
           <div className="grid gap-5 lg:grid-cols-2">
             <Input
               label="Product name"
@@ -403,9 +461,22 @@ export default function AdminFashionPage() {
           </label>
 
           <div className="flex justify-end">
-            <Button disabled={isCreatingProduct} type="submit">
-              {isCreatingProduct ? 'Adding product...' : 'Add fashion product'}
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              {isEditingProduct ? (
+                <Button type="button" variant="secondary" onClick={resetProductForm}>
+                  Cancel edit
+                </Button>
+              ) : null}
+              <Button disabled={isSavingProduct} type="submit">
+                {isEditingProduct
+                  ? isSavingProduct
+                    ? 'Saving changes...'
+                    : 'Save changes'
+                  : isCreatingProduct
+                    ? 'Adding product...'
+                    : 'Add fashion product'}
+              </Button>
+            </div>
           </div>
         </form>
       </Card>

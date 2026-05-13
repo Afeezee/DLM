@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import { useMembership } from '../hooks/useMembership'
 import { useServices } from '../hooks/useServices'
+import { getServiceImage } from '../lib/catalog-visuals'
 import { getPricing } from '../lib/pricing'
 import { formatCurrency } from '../utils/formatCurrency'
 
@@ -43,14 +44,24 @@ export default function ServiceDetailPage() {
   const homePrice = service.has_home_service
     ? getPricing(service, isMember, { serviceType: 'home' })
     : null
+  const heroImage = getServiceImage(service)
 
   return (
     <section className="shell py-12 sm:py-16 lg:py-20">
       <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
         <div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="overflow-hidden rounded-[32px] border border-white/70 bg-white/80 shadow-sm">
+            <img
+              alt={service.name}
+              className="h-[420px] w-full object-cover sm:h-[500px]"
+              loading="lazy"
+              src={heroImage}
+            />
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Badge tone="accent">{service.category?.name ?? 'Service detail'}</Badge>
-            <Badge tone="dark">{service.has_home_service ? 'Home service available' : 'Studio only'}</Badge>
+            <Badge tone="dark">{service.has_home_service ? 'Home or studio' : 'Studio only'}</Badge>
           </div>
           <h1 className="mt-6 max-w-4xl text-5xl leading-[0.95] sm:text-6xl">{service.name}</h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-brand-dark/72">{service.description}</p>
@@ -61,18 +72,18 @@ export default function ServiceDetailPage() {
               <p className="mt-3 text-2xl font-display">{service.duration_mins} mins</p>
             </Card>
             <Card className="p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Pricing mode</p>
-              <p className="mt-3 text-2xl font-display">{isMember ? 'Member' : 'Standard'}</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Mode</p>
+              <p className="mt-3 text-2xl font-display">{service.has_home_service ? 'Flexible' : 'Studio'}</p>
             </Card>
             <Card className="p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Catalogue source</p>
-              <p className="mt-3 text-2xl font-display capitalize">{dataSource}</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">View</p>
+              <p className="mt-3 text-2xl font-display capitalize">{dataSource === 'fallback' ? 'Preview' : 'Live'}</p>
             </Card>
           </div>
         </div>
 
         <Card className="p-6 sm:p-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-brand-dark/45">Price summary</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-brand-dark/45">Quick book</p>
           <div className="mt-6 space-y-4">
             <div className="rounded-[24px] bg-brand-light/80 p-5">
               <div className="flex items-center justify-between gap-3">
@@ -109,15 +120,15 @@ export default function ServiceDetailPage() {
           </div>
 
           <div className="mt-6 rounded-[24px] bg-white/80 p-5 text-sm leading-6 text-brand-dark/65">
-            Bookings are coordinated by the DLM team. Home service selections will require an address before payment during the booking flow.
+            Pick a slot, confirm your details, and pay. Home bookings ask for your address before checkout.
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link to={`/book/${service.id}`}>
-              <Button>Book this service</Button>
+              <Button>Book now</Button>
             </Link>
             <Link to="/services">
-              <Button variant="secondary">Back to catalogue</Button>
+              <Button variant="secondary">Back to services</Button>
             </Link>
           </div>
         </Card>

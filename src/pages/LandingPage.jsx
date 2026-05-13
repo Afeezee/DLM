@@ -7,6 +7,7 @@ import Card from '../components/ui/Card'
 import ServiceCard from '../components/shared/ServiceCard'
 import { useMembership } from '../hooks/useMembership'
 import { useServices } from '../hooks/useServices'
+import { getServiceImage } from '../lib/catalog-visuals'
 import { getPricing } from '../lib/pricing'
 import { formatCurrency } from '../utils/formatCurrency'
 
@@ -132,7 +133,7 @@ export default function LandingPage() {
                 ctaLabel="Explore service"
                 description={service.description}
                 eyebrow={service.category?.name ?? 'Featured service'}
-                imageUrl={service.image_url}
+                imageUrl={getServiceImage(service)}
                 memberPrice={service.member_price}
                 price={getPricing(service, isMember)}
                 standardPrice={service.standard_price}

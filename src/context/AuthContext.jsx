@@ -77,6 +77,10 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (nextSession?.user) {
+        setIsLoading(true)
+      }
+
       setSession(nextSession ?? null)
       setUser(nextSession?.user ?? null)
 
@@ -115,13 +119,17 @@ export function AuthProvider({ children }) {
       }
     }
 
+    setIsLoading(true)
+
     const response = await supabase.auth.signInWithPassword({ email, password })
 
     if (response.error || !response.data.user) {
+      setIsLoading(false)
       return response
     }
 
     const nextProfile = await refreshProfile(response.data.user.id)
+    setIsLoading(false)
 
     return {
       data: {

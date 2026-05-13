@@ -13,6 +13,8 @@ export default function ProductCard({
   title,
   to,
 }) {
+  const savings = Math.max(0, Number(standardPrice ?? 0) - Number(memberPrice ?? standardPrice ?? 0))
+
   return (
     <motion.article
       whileHover={{ y: -6 }}
@@ -39,16 +41,29 @@ export default function ProductCard({
       <div className="flex flex-1 flex-col gap-5 p-6">
         <div>
           <h3 className="text-3xl">{title}</h3>
-          <p className="mt-3 text-sm leading-6 text-brand-dark/70">
-            Standard {formatCurrency(standardPrice)}
-          </p>
-          <p className="mt-1 text-sm leading-6 text-brand-primary">
-            Member {formatCurrency(memberPrice ?? standardPrice)}
-          </p>
+          <div className="mt-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-brand-dark/45">Now showing</p>
+              <p className="mt-2 text-3xl font-display">{formatCurrency(price)}</p>
+            </div>
+            {savings > 0 ? (
+              <div className="rounded-full bg-brand-primary/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Save {formatCurrency(savings)}
+              </div>
+            ) : null}
+          </div>
         </div>
-        <div className="rounded-[24px] bg-brand-light/75 px-4 py-4">
-          <p className="text-xs uppercase tracking-[0.22em] text-brand-dark/45">Current display price</p>
-          <p className="mt-2 text-2xl font-display">{formatCurrency(price)}</p>
+        <div className="grid gap-3 rounded-[24px] bg-brand-light/75 px-4 py-4 sm:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-brand-dark/45">Standard</p>
+            <p className="mt-2 text-lg font-semibold text-brand-dark">{formatCurrency(standardPrice)}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-brand-dark/45">Member</p>
+            <p className="mt-2 text-lg font-semibold text-brand-primary">
+              {formatCurrency(memberPrice ?? standardPrice)}
+            </p>
+          </div>
         </div>
         <Link to={to} className="mt-auto inline-flex">
           <Button variant="secondary">View product</Button>

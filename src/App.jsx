@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   BrowserRouter,
@@ -85,6 +85,7 @@ function ScrollToTop() {
 }
 
 function ProtectedRoute({ children }) {
+  const location = useLocation()
   const { user, isLoading } = useAuth()
 
   if (isLoading) {
@@ -92,21 +93,22 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
 
   return children
 }
 
 function AdminRoute({ children }) {
+  const location = useLocation()
   const { user, profile, isLoading } = useAuth()
 
-  if (isLoading) {
+  if (isLoading || (user && !profile)) {
     return <LoaderScreen />
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace state={{ from: location }} />
   }
 
   if (profile?.role !== 'admin') {
@@ -145,12 +147,14 @@ function DashboardLayout() {
 }
 
 function AdminLayout() {
+  const [isAdminNavOpen, setIsAdminNavOpen] = useState(false)
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-brand-light lg:pl-72">
       <AmbientBackdrop />
-      <AdminSidebar />
+      <AdminSidebar isMobileOpen={isAdminNavOpen} onClose={() => setIsAdminNavOpen(false)} />
       <div className="relative z-10 min-h-screen">
-        <AdminTopbar />
+        <AdminTopbar onMenuOpen={() => setIsAdminNavOpen(true)} />
         <main className="px-4 py-6 sm:px-6 lg:px-10">
           <Outlet />
         </main>

@@ -8,12 +8,13 @@ import Input from '../components/ui/Input'
 import ServiceCard from '../components/shared/ServiceCard'
 import { useMembership } from '../hooks/useMembership'
 import { useServices } from '../hooks/useServices'
+import { getServiceImage } from '../lib/catalog-visuals'
 import { getPricing } from '../lib/pricing'
 import { formatCurrency } from '../utils/formatCurrency'
 
 export default function ServicesPage() {
   const { categories, dataSource, error, isLoading, services } = useServices()
-  const { activeMembership, isMember } = useMembership()
+  const { isMember } = useMembership()
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [serviceType, setServiceType] = useState('walk-in')
@@ -29,20 +30,55 @@ export default function ServicesPage() {
     return matchesCategory && matchesSearch && matchesServiceType
   })
 
+  const showcaseServices = (visibleServices.length ? visibleServices : services).slice(0, 3)
+  const homeReadyCount = visibleServices.filter((service) => service.has_home_service).length
+  const startingPrice = visibleServices.length
+    ? Math.min(...visibleServices.map((service) => getPricing(service, isMember, { serviceType })))
+    : null
+
   return (
     <section className="shell py-12 sm:py-16 lg:py-20">
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+      <div className="grid gap-8 xl:grid-cols-[1.02fr_0.98fr] xl:items-start">
         <div>
-          <Badge tone="accent">Services catalogue</Badge>
+          <Badge tone="accent">Book a service</Badge>
           <RevealText
             amount={0.2}
             as="h1"
             className="mt-5 max-w-4xl text-5xl leading-[0.93] text-gradient sm:text-6xl"
-            text="Browse studio and home-service experiences with pricing that respects membership status."
+            text="Glow-ups, grooming, and home pamper sessions made easy."
           />
           <p className="mt-6 max-w-3xl text-lg leading-8 text-brand-dark/72">
-            This catalogue reads from Supabase when configured and falls back to preview data in development, so the booking and pricing journey can move forward without blocking the UI.
+            Pick a service, see the price, and book fast.
           </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <Card className="p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Mode</p>
+              <p className="mt-3 text-2xl font-display">{serviceType === 'home' ? 'Home' : 'Walk-in'}</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">From</p>
+              <p className="mt-3 text-2xl font-display">
+                {startingPrice === null ? 'Coming soon' : formatCurrency(startingPrice)}
+              </p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Home-ready</p>
+              <p className="mt-3 text-2xl font-display">{homeReadyCount}</p>
+            </Card>
+          </div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <div className="rounded-full bg-white/85 px-4 py-3 text-sm font-medium text-brand-dark/72 shadow-sm backdrop-blur-xl">
+              {isMember ? 'Member prices are on' : 'Standard prices are on'}
+            </div>
+            <div className="rounded-full bg-brand-secondary/20 px-4 py-3 text-sm font-medium text-brand-dark/72">
+              {dataSource === 'fallback' ? 'Preview catalogue' : 'Live catalogue'}
+            </div>
+          </div>
+          {error ? (
+            <div className="mt-5 rounded-[24px] bg-brand-accent/10 px-4 py-3 text-sm text-brand-accent">
+              {error}
+            </div>
+          ) : null}
         </div>
 
         <motion.div
@@ -51,33 +87,36 @@ export default function ServicesPage() {
           viewport={{ amount: 0.2, once: true }}
           whileInView={{ opacity: 1, y: 0 }}
         >
-          <Card className="grid gap-4 border-white/70 bg-white/80 p-6 backdrop-blur-xl sm:grid-cols-2">
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Pricing mode</p>
-            <p className="mt-3 text-3xl font-display">
-              {isMember ? 'Member pricing active' : 'Standard pricing active'}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-brand-dark/65">
-              {activeMembership
-                ? 'Your active membership is applied automatically across member-aware price displays.'
-                : 'Sign in with an active membership to see subsidised pricing reflected throughout the catalogue.'}
-            </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {showcaseServices.map((service, index) => (
+              <Card
+                key={service.id}
+                className={[
+                  'group relative overflow-hidden border-white/70 p-0',
+                  index === 0 ? 'sm:col-span-2' : '',
+                ].join(' ')}
+              >
+                <div className={index === 0 ? 'h-[340px]' : 'h-[220px]'}>
+                  <img
+                    alt={service.name}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    src={getServiceImage(service)}
+                  />
+                </div>
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(24,18,12,0.08),rgba(24,18,12,0.78))]" />
+                <div className="absolute inset-x-0 bottom-0 p-6 text-brand-light">
+                  <p className="text-xs uppercase tracking-[0.24em] text-brand-light/65">
+                    {service.category?.name ?? 'Featured service'}
+                  </p>
+                  <p className="mt-2 text-3xl font-display">{service.name}</p>
+                  <p className="mt-3 text-sm font-medium text-brand-light/78">
+                    {formatCurrency(getPricing(service, isMember, { serviceType }))}
+                  </p>
+                </div>
+              </Card>
+            ))}
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Data source</p>
-            <p className="mt-3 text-3xl font-display capitalize">{dataSource}</p>
-            <p className="mt-2 text-sm leading-6 text-brand-dark/65">
-              {dataSource === 'supabase'
-                ? 'Live catalogue records are being rendered from your database.'
-                : 'Preview catalogue records are being used until Supabase services are available.'}
-            </p>
-          </div>
-          {error ? (
-            <div className="sm:col-span-2 rounded-[24px] bg-brand-accent/10 px-4 py-3 text-sm text-brand-accent">
-              {error}
-            </div>
-          ) : null}
-          </Card>
         </motion.div>
       </div>
 
@@ -160,13 +199,13 @@ export default function ServicesPage() {
         <div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Catalogue results</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-brand-dark/45">Now showing</p>
               <h2 className="mt-2 text-3xl">
-                {isLoading ? 'Loading services...' : `${visibleServices.length} services available`}
+                {isLoading ? 'Loading services...' : `${visibleServices.length} services ready to book`}
               </h2>
             </div>
             <div className="rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-brand-dark/70 shadow-sm">
-              Displaying {serviceType === 'home' ? 'home-service' : 'walk-in'} pricing from{' '}
+              {serviceType === 'home' ? 'Home-service pricing' : 'Walk-in pricing'} from{' '}
               {visibleServices.length
                 ? formatCurrency(getPricing(visibleServices[0], isMember, { serviceType }))
                 : formatCurrency(0)}
@@ -183,11 +222,7 @@ export default function ServicesPage() {
             <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleServices.map((service, index) => {
                 const price = getPricing(service, isMember, { serviceType })
-                const details = [
-                  service.description,
-                  `${service.duration_mins} mins`,
-                  service.has_home_service ? 'Home service available' : 'Studio only',
-                ].join(' ')
+                const details = service.description.split('.')[0]
 
                 return (
                   <motion.div
@@ -201,7 +236,8 @@ export default function ServicesPage() {
                       ctaLabel="View service"
                       description={details}
                       eyebrow={service.category?.name ?? 'Signature experience'}
-                      imageUrl={service.image_url}
+                      imageUrl={getServiceImage(service)}
+                      meta={`${service.duration_mins} mins • ${service.has_home_service ? 'Home or studio' : 'Studio only'}`}
                       memberPrice={
                         serviceType === 'home' && service.has_home_service
                           ? service.home_service_member_price
@@ -222,9 +258,9 @@ export default function ServicesPage() {
             </div>
           ) : (
             <Card className="mt-6 p-8">
-              <h3 className="text-3xl">No services match this filter</h3>
+              <h3 className="text-3xl">No matches yet</h3>
               <p className="mt-3 max-w-xl text-sm leading-6 text-brand-dark/65">
-                Try a broader keyword, switch back to all categories, or change the service type to see more results.
+                Try a broader keyword, switch back to all categories, or change the service type.
               </p>
             </Card>
           )}

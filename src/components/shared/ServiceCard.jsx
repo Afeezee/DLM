@@ -9,6 +9,7 @@ export default function ServiceCard({
   description,
   eyebrow,
   imageUrl,
+  meta,
   memberPrice,
   price,
   standardPrice,
@@ -45,6 +46,11 @@ export default function ServiceCard({
       <div className="flex flex-1 flex-col gap-5 p-6">
         <div>
           <h3 className="text-3xl">{title}</h3>
+          {meta ? (
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-dark/45">
+              {meta}
+            </p>
+          ) : null}
           <p className="mt-3 text-sm leading-6 text-brand-dark/70">{description}</p>
         </div>
         {standardPrice !== null && standardPrice !== undefined ? (

@@ -6,6 +6,7 @@ import Select from '../../components/ui/Select'
 import Table from '../../components/ui/Table'
 import Textarea from '../../components/ui/Textarea'
 import Toast from '../../components/ui/Toast'
+import CloudinaryUploadField from '../../components/shared/CloudinaryUploadField'
 import StatusBadge from '../../components/shared/StatusBadge'
 import { useAdminServicesManager } from '../../hooks/useAdminServicesManager'
 import { formatCurrency } from '../../utils/formatCurrency'
@@ -75,6 +76,21 @@ export default function AdminServicesPage() {
     setServiceForm((current) => ({
       ...current,
       [name]: type === 'checkbox' ? checked : value,
+    }))
+  }
+
+  const handleServiceImagesUploaded = (uploads) => {
+    const nextUrl = uploads[0]?.secureUrl
+
+    if (!nextUrl) {
+      return
+    }
+
+    setErrorMessage('')
+    setSuccessMessage('Service image uploaded successfully.')
+    setServiceForm((current) => ({
+      ...current,
+      imageUrl: nextUrl,
     }))
   }
 
@@ -148,6 +164,8 @@ export default function AdminServicesPage() {
     status: <StatusBadge status={service.is_active ? 'active' : 'inactive'} label={service.is_active ? 'Active' : 'Inactive'} />,
   }))
 
+  const serviceImagePreviews = serviceForm.imageUrl ? [serviceForm.imageUrl] : []
+
   return (
     <div className="space-y-8">
       <section>
@@ -209,7 +227,16 @@ export default function AdminServicesPage() {
               value={serviceForm.homeServiceMemberPrice}
             />
             <Input label="Duration (mins)" name="durationMins" onChange={handleServiceChange} type="number" value={serviceForm.durationMins} />
-            <Input label="Image URL" name="imageUrl" onChange={handleServiceChange} value={serviceForm.imageUrl} />
+            <div className="md:col-span-2 space-y-4">
+              <Input label="Image URL" name="imageUrl" onChange={handleServiceChange} value={serviceForm.imageUrl} />
+              <CloudinaryUploadField
+                folder="services"
+                helperText="Upload a service cover image directly to Cloudinary, then create the service with the saved URL."
+                label="Service image"
+                onUploaded={handleServiceImagesUploaded}
+                previews={serviceImagePreviews}
+              />
+            </div>
             <div className="md:col-span-2">
               <Textarea label="Description" name="description" onChange={handleServiceChange} required value={serviceForm.description} />
             </div>

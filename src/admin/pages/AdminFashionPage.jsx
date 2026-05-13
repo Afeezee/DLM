@@ -6,6 +6,7 @@ import Card from '../../components/ui/Card'
 import Table from '../../components/ui/Table'
 import Textarea from '../../components/ui/Textarea'
 import Toast from '../../components/ui/Toast'
+import CloudinaryUploadField from '../../components/shared/CloudinaryUploadField'
 import StatusBadge from '../../components/shared/StatusBadge'
 import { useAdminFashionManager } from '../../hooks/useAdminFashionManager'
 import { exportCSV } from '../../utils/exportCSV'
@@ -55,6 +56,30 @@ export default function AdminFashionPage() {
       ...current,
       [name]: type === 'checkbox' ? checked : value,
     }))
+  }
+
+  const handleProductImagesUploaded = (uploads) => {
+    const nextUrls = uploads.map((upload) => upload.secureUrl).filter(Boolean)
+
+    if (!nextUrls.length) {
+      return
+    }
+
+    setErrorMessage('')
+    setMessage(
+      `${nextUrls.length} fashion image${nextUrls.length === 1 ? '' : 's'} uploaded successfully.`,
+    )
+    setProductForm((current) => {
+      const currentUrls = current.imageUrls
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean)
+
+      return {
+        ...current,
+        imageUrls: [...new Set([...currentUrls, ...nextUrls])].join(', '),
+      }
+    })
   }
 
   const handleCreateProduct = async (event) => {
@@ -251,6 +276,11 @@ export default function AdminFashionPage() {
     total_amount: Number(order.total_amount ?? 0),
   }))
 
+  const productImagePreviews = productForm.imageUrls
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+
   return (
     <div className="space-y-8">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -350,6 +380,15 @@ export default function AdminFashionPage() {
             onChange={handleProductFormChange}
             placeholder="https://..., https://..."
             value={productForm.imageUrls}
+          />
+
+          <CloudinaryUploadField
+            folder="fashion"
+            helperText="Upload one or more product images directly to Cloudinary. Uploaded URLs are appended to the field above."
+            label="Product image gallery"
+            multiple
+            onUploaded={handleProductImagesUploaded}
+            previews={productImagePreviews}
           />
 
           <label className="flex items-center gap-3 text-sm font-semibold text-brand-dark">
